@@ -98,6 +98,10 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
             funcName: "cspace.recordList.selectNavigateVocab",
             args: ["{recordList}.model", "{recordList}.options", "{recordList}.options.urls.navigateLocal", "{permissionsResolver}", "{recordList}.dom"]
         }); 
+        fluid.demands("select", ["cspace.recordList", "cspace.localData", "concept", "cspace.relatedRecordsList"], {
+            funcName: "cspace.recordList.selectNavigateVocab",
+            args: ["{recordList}.model", "{recordList}.options", "{recordList}.options.urls.navigateLocal", "{permissionsResolver}", "{recordList}.dom"]
+        });
         fluid.demands("select", ["cspace.recordList", "cspace.localData", "taxon", "cspace.relatedRecordsList"], {
             funcName: "cspace.recordList.selectNavigateVocab",
             args: ["{recordList}.model", "{recordList}.options", "{recordList}.options.urls.navigateLocal", "{permissionsResolver}", "{recordList}.dom"]
@@ -706,6 +710,26 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                 }
             }, "{arguments}.1"]
         });
+        fluid.demands("cspace.autocomplete", ["cspace.recordEditor", "concept", "cspace.hierarchy"], {
+            container: "{arguments}.0",
+            mergeAllOptions: [{
+                invokers: {
+                    handlePermissions: {
+                        funcName: "cspace.autocomplete.handlePermissions",
+                        args: ["{autocomplete}.applier", "{autocomplete}.model", "cspace.permissions.resolve", {
+                            resolver: "{permissionsResolver}",
+                            permission: "update"
+                        }, "create", "{autocomplete}.autocompleteInput"]
+                    }
+                },
+                components: {
+                    confirmation: "{confirmation}",
+                    broaderDataSource: {
+                        type: "cspace.autocomplete.broaderDataSource"
+                    }
+                }
+            }, "{arguments}.1"]
+        });
         fluid.demands("cspace.autocomplete", ["cspace.recordEditor", "person", "cspace.hierarchy"], {
             container: "{arguments}.0",
             mergeAllOptions: [{
@@ -1151,6 +1175,11 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
             funcName: "cspace.recordEditor.removeWithCheck",
             args: "{recordEditor}"
         });
+
+        fluid.demands("remove", ["cspace.recordEditor", "concept"], {
+            funcName: "cspace.recordEditor.removeWithCheck",
+            args: "{recordEditor}"
+        });
         
         fluid.demands("remove", ["cspace.recordEditor", "place"], {
             funcName: "cspace.recordEditor.removeWithCheck",
@@ -1335,7 +1364,7 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                 showDeleteButton: {
                     expander: {
                         type: "fluid.deferredInvokeCall",
-                        func: "cspace.permissions.resolveMultiple",
+                        func: "cspace.util.resolveDeleteRelation",
                         args: {
                             recordTypeManager: "{recordTypeManager}",
                             resolver: "{permissionsResolver}",
@@ -1345,7 +1374,8 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                             }, {
                                 target: "{relatedRecordsTab}.related",
                                 permission: "update"
-                            }]
+                            }],
+                            recordModel: "{relatedRecordsTab}.model"
                         }
                     }
                 },
@@ -1379,7 +1409,7 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                 showDeleteButton: {
                     expander: {
                         type: "fluid.deferredInvokeCall",
-                        func: "cspace.permissions.resolveMultiple",
+                        func: "cspace.util.resolveDeleteRelation",
                         args: {
                             recordTypeManager: "{recordTypeManager}",
                             resolver: "{permissionsResolver}",
@@ -1389,7 +1419,8 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                             }, {
                                 target: "{relatedRecordsTab}.related",
                                 permission: "update"
-                            }]
+                            }],
+                            recordModel: "{relatedRecordsTab}.model"
                         }
                     }
                 },
@@ -1524,6 +1555,20 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                 }
             }
         });
+        fluid.demands("cspace.recordList", ["cspace.relatedRecordsList", "concept"], {
+            container: "{relatedRecordsList}.dom.recordListSelector",
+            options: {
+                columns: ["number", "summary", "sourceFieldName"],
+                strings: {
+                    number: "{globalBundle}.messageBase.rl-rrl-number",
+                    summary: "{globalBundle}.messageBase.rl-rrl-summary",
+                    sourceFieldName: "{globalBundle}.messageBase.rl-rrl-sourceFieldName"
+                },
+                model: {
+                    items: "{relatedRecordsList}.model.refobjs"
+                }
+            }
+        });
 
         fluid.demands("cspace.recordList", "cspace.relatedRecordsList", {
             container: "{relatedRecordsList}.dom.recordListSelector",
@@ -1585,6 +1630,10 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
             args: ["{recordList}.model", "{recordList}.options", "{recordList}.options.urls.navigate", "{permissionsResolver}", "{recordList}.dom"]
         });
         fluid.demands("select", ["cspace.recordList", "place", "cspace.relatedRecordsList"], {
+            funcName: "cspace.recordList.selectNavigateVocab",
+            args: ["{recordList}.model", "{recordList}.options", "{recordList}.options.urls.navigate", "{permissionsResolver}", "{recordList}.dom"]
+        });
+        fluid.demands("select", ["cspace.recordList", "concept", "cspace.relatedRecordsList"], {
             funcName: "cspace.recordList.selectNavigateVocab",
             args: ["{recordList}.model", "{recordList}.options", "{recordList}.options.urls.navigate", "{permissionsResolver}", "{recordList}.dom"]
         });
@@ -1785,6 +1834,16 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
             }
         });
         fluid.demands("relationManager", ["cspace.relatedRecordsList", "place"], {
+            container: "{relatedRecordsList}.dom.relationManagerSelector", 
+            options: {
+                components: {
+                    showAddButton: {
+                        type: "fluid.emptySubcomponent"
+                    }
+                }
+            }
+        });
+        fluid.demands("relationManager", ["cspace.relatedRecordsList", "concept"], {
             container: "{relatedRecordsList}.dom.relationManagerSelector", 
             options: {
                 components: {
@@ -2443,6 +2502,53 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                 }
             }
         });
+        fluid.demands("sidebar", ["cspace.pageBuilder", "concept"], {
+            container: "{pageBuilder}.options.selectors.sidebar",
+            options: {
+                primaryRecordType: "{pageBuilder}.options.pageType",
+                recordApplier: "{pageBuilder}.applier",
+                recordModel: "{pageBuilder}.model",
+                relationsElPath: "refobjs",
+                components: {
+                    cataloging: {
+                        type: "fluid.emptySubcomponent"
+                    },
+                    procedures: {
+                        type: "fluid.emptySubcomponent"
+                    },
+                    nonVocabularies: {
+                        type: "cspace.relatedRecordsList",
+                        createOnEvent: "afterRender",
+                        options: {
+                            primary: "{sidebar}.options.primaryRecordType",
+                            related: "nonVocabularies",
+                            applier: "{sidebar}.options.recordApplier",
+                            model: "{sidebar}.options.recordModel",
+                            relationsElPath: "{sidebar}.options.relationsElPath"
+                        }
+                    }
+                },
+                selectors: {
+                    relatedNonVocabularies: ".csc-related-nonVocabularies"
+                },
+                selectorsToIgnore: ["report", "numOfTerms", "mediaSnapshot", "termsUsed", "relatedCataloging", "relatedProcedures", "header", "togglable", "relatedNonVocabularies"],
+                model: {
+                    categories: [{
+                        expander: {
+                            type: "fluid.deferredInvokeCall",
+                            func: "cspace.util.modelBuilder",
+                            args: {
+                                callback: "cspace.sidebar.buildModel",
+                                related: "nonVocabularies",
+                                resolver: "{permissionsResolver}",
+                                recordTypeManager: "{recordTypeManager}",
+                                permission: "list"
+                            }
+                        }
+                    }, undefined]
+                }
+            }
+        });
         fluid.demands("cspace.sidebar.media", "cspace.sidebar", {
             container: "{arguments}.0",
             mergeAllOptions: [{
@@ -2500,7 +2606,8 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                     tabs: {
                         primary: {
                             "name": "tablist-primary",
-                            href: "#primaryTab"
+                            href: "#primaryTab",
+                            title: "tablist-primary"
                         }
                     }
                 }
@@ -2513,7 +2620,8 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                     tabs: {
                         primary: {
                             "name": "tablist-primary",
-                            href: "#primaryTab"
+                            href: "#primaryTab",
+                            title: "tablist-primary"
                         }
                     }
                 }
@@ -2526,7 +2634,8 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                     tabs: {
                         primary: {
                             "name": "tablist-primary",
-                            href: "#primaryTab"
+                            href: "#primaryTab",
+                            title: "tablist-primary"
                         }
                     }
                 }
@@ -2539,7 +2648,22 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                     tabs: {
                         primary: {
                             "name": "tablist-primary",
-                            href: "#primaryTab"
+                            href: "#primaryTab",
+                            title: "tablist-primary"
+                        }
+                    }
+                }
+            }
+        });
+        fluid.demands("tabsList", ["cspace.tabs", "concept"], {
+            container: "{tabs}.dom.tabsList",
+            options: {
+                model: {
+                    tabs: {
+                        primary: {
+                            "name": "tablist-primary",
+                            href: "#primaryTab",
+                            title: "tablist-primary"
                         }
                     }
                 }
