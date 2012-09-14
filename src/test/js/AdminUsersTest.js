@@ -519,8 +519,7 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                     priority: "last"
                 }
             }
-        }/*
-,
+        },
         "Confirmation proceed": {
             testType: "asyncTest",
             listeners: {
@@ -539,8 +538,8 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                         locateSelector(recordRenderer, "screenName").val("New Name").change();
                         admin.adminRecordEditor.confirmation.popup.bind("dialogopen", function () {
                             jqUnit.isVisible("Confirmation dialog should now be visible", admin.adminRecordEditor.confirmation.popup);
-                            admin.events.recordEditorReady.addListener(function () {
-                                jqUnit.notVisible("Confirmation dialog is now invisible", admin.adminRecordEditor.confirmation.popup);
+                            admin.events.recordEditorReady.addListener(function (admin, recordRenderer) {
+                                jqUnit.notVisible("Confirmation dialog is not invisible", admin.adminRecordEditor.confirmation.popup);
                                 jqUnit.assertEquals("User Name should now be", "Administrator", locateSelector(recordRenderer, "screenName").val());
                                 start();
                             });
@@ -553,7 +552,6 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                 }
             }
         }
-*/
     };
 
     fluid.each(["ready", "onSearch", "afterSearch", "onUnSearch", "afterUnSearch"], function (eventName) {
@@ -623,7 +621,7 @@ https://source.collectionspace.org/collection-space/LICENSE.txt
                 if (listener.once) {
                     listener.listener = function (admin) {
                         admin.events[fluid.pathUtil.getHeadPath(eventName)].removeListener(fluid.pathUtil.getTailPath(eventName));
-                        originalListener(admin);
+                        originalListener.apply(null, fluid.makeArray(arguments));
                     };
                 }
                 listeners[eventName] = {
